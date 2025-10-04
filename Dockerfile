@@ -16,8 +16,10 @@ RUN npm ci
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/prisma ./prisma
 COPY . .
+
+# Ensure Prisma client is generated
+RUN npx prisma generate
 
 # Build the app
 RUN npm run build
