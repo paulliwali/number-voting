@@ -18,6 +18,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Debug: Check if prisma directory exists
+RUN ls -la prisma/ || echo "prisma directory not found"
+
 # Ensure Prisma client is generated
 RUN npx prisma generate
 
