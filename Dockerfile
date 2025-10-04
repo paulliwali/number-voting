@@ -2,7 +2,7 @@ FROM node:20-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
 # Copy package files and prisma schema
@@ -14,21 +14,21 @@ RUN npm ci
 
 # Rebuild the source code only when needed
 FROM base AS builder
+RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
+
+# Copy node_modules from deps
 COPY --from=deps /app/node_modules ./node_modules
+
+# Copy all source files including prisma
 COPY . .
 
-# Debug: Check if prisma directory exists
-RUN ls -la prisma/ || echo "prisma directory not found"
-
-# Ensure Prisma client is generated
-RUN npx prisma generate
-
-# Build the app
+# Build the app (build script includes prisma generate)
 RUN npm run build
 
 # Production image, copy all the files and run next
 FROM base AS runner
+RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
 ENV NODE_ENV production
@@ -37,6 +37,11 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 COPY --from=builder /app/public ./public
+
+# Copy prisma schema and migrations for runtime
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
 # Set the correct permission for prerender cache
 RUN mkdir .next
