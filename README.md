@@ -1,36 +1,122 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Number Voting App
 
-## Getting Started
+A modern web application where users vote between two random numbers (0-100). Built with Next.js 14, TypeScript, PostgreSQL, and Framer Motion for smooth animations.
 
-First, run the development server:
+## Features
 
+- 🎲 Random number generation (0-100)
+- ⚡ Instant voting with smooth animations
+- 📊 Vote tracking and statistics
+- 🎨 Beautiful gradient UI with glass morphism
+- 📱 Fully responsive design
+- 🚀 Optimized for Railway deployment
+
+## Tech Stack
+
+- **Frontend**: Next.js 15 (App Router), TypeScript, Tailwind CSS 4, Framer Motion
+- **Backend**: Next.js API Routes
+- **Database**: PostgreSQL with Prisma ORM
+- **Deployment**: Railway
+
+## Local Development
+
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+2. **Set up the database:**
+   ```bash
+   npx prisma dev
+   npx prisma migrate dev --name init
+   ```
+
+3. **Start the development server:**
+   ```bash
+   npm run dev
+   ```
+
+4. **Open [http://localhost:3000](http://localhost:3000) in your browser**
+
+## Railway Deployment
+
+### Prerequisites
+- Railway account
+- GitHub repository
+
+### Deploy Steps
+
+1. **Connect your GitHub repo to Railway:**
+   - Go to [Railway](https://railway.com)
+   - Click "Deploy Now" → "Deploy from GitHub repo"
+   - Select your repository
+
+2. **Add PostgreSQL database:**
+   - In your Railway project dashboard
+   - Click "Add Service" → "Database" → "PostgreSQL"
+   - Railway will automatically set the `DATABASE_URL` environment variable
+
+3. **Configure environment variables:**
+   Railway will automatically detect and set most variables, but ensure:
+   - `DATABASE_URL` is set (auto-configured with PostgreSQL addon)
+   - `NODE_ENV` is set to `production` (auto-configured)
+
+4. **Deploy:**
+   - Railway will automatically build and deploy your app
+   - Your app will be available at `https://your-app-name.railway.app`
+
+### Database Migration on Railway
+
+The app will automatically run `prisma generate` during the build process. For the initial deployment, Railway will need to run the database migration:
+
+1. In Railway dashboard, go to your service
+2. Open the "Settings" tab
+3. Add a custom start command: `npx prisma migrate deploy && npm start`
+
+Or manually run the migration after deployment:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+railway run npx prisma migrate deploy
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Environment Variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DATABASE_URL` | PostgreSQL connection string | Auto-set by Railway |
+| `NODE_ENV` | Environment mode | `production` |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## API Endpoints
 
-## Learn More
+- `GET /api/numbers` - Get two random numbers
+- `POST /api/vote` - Submit a vote
+- `GET /api/stats` - Get voting statistics
 
-To learn more about Next.js, take a look at the following resources:
+## Project Structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+src/
+├── app/
+│   ├── api/           # API routes
+│   └── page.tsx       # Main page
+├── components/
+│   └── VotingInterface.tsx  # Main voting component
+└── lib/
+    └── prisma.ts      # Prisma client setup
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Performance Features
 
-## Deploy on Vercel
+- **Framer Motion**: Smooth, hardware-accelerated animations
+- **Next.js 15**: App Router with React Server Components
+- **Turbopack**: Fast development builds
+- **Optimized Images**: Next.js automatic image optimization
+- **Glass Morphism UI**: Modern, visually appealing design
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Browser Support
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Chrome (recommended)
+- Firefox
+- Safari
+- Edge
+
+Modern browsers with ES2020+ support required for optimal experience.

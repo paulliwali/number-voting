@@ -1,0 +1,11 @@
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "npm start"
+
+[[services]]
+name = "number-voting"
+
+[services.domains]
+type = "custom"
