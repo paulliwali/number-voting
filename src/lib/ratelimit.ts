@@ -2,11 +2,23 @@ import { Ratelimit } from '@upstash/ratelimit'
 import Redis from 'ioredis'
 
 // Type definition for Redis client compatible with @upstash/ratelimit
+// The library expects get/set methods with generic types, but only uses strings at runtime
 interface UpstashRedisCompatible {
-  get: (key: string) => Promise<string | null>
-  set: (key: string, value: string, options?: { ex?: number; px?: number }) => Promise<string>
-  sadd: (key: string, ...members: string[]) => Promise<number>
-  eval: (script: string, keys: string[], args: string[]) => Promise<unknown>
+  get: <TData = string>(key: string) => Promise<TData | null>
+  set: <TData = string>(
+    key: string,
+    value: TData,
+    options?:
+      | { ex: number; px?: never }
+      | { px: number; ex?: never }
+      | { ex?: never; px?: never }
+  ) => Promise<'OK' | TData | null>
+  sadd: <TData = number>(key: string, ...members: string[]) => Promise<TData>
+  eval: <TArgs extends unknown[], TData = unknown>(
+    script: string,
+    keys: string[],
+    args: TArgs
+  ) => Promise<TData>
 }
 
 // Create Redis client wrapper that works with @upstash/ratelimit
@@ -18,25 +30,44 @@ if (process.env.REDIS_URL) {
 
   // Create adapter that implements Upstash Redis interface
   redis = {
-    get: async (key: string) => {
+    get: async <TData = string>(key: string): Promise<TData | null> => {
       const result = await ioredisClient.get(key)
-      return result
+      return result as TData | null
     },
-    set: async (key: string, value: string, options?: { ex?: number; px?: number }) => {
+    set: async <TData = string>(
+      key: string,
+      value: TData,
+      options?:
+        | { ex: number; px?: never }
+        | { px: number; ex?: never }
+        | { ex?: never; px?: never }
+    ): Promise<'OK' | TData | null> => {
+      const stringValue = String(value)
       if (options?.ex) {
-        await ioredisClient.setex(key, options.ex, value)
+        await ioredisClient.setex(key, options.ex, stringValue)
       } else if (options?.px) {
-        await ioredisClient.psetex(key, options.px, value)
+        await ioredisClient.psetex(key, options.px, stringValue)
       } else {
-        await ioredisClient.set(key, value)
+        await ioredisClient.set(key, stringValue)
       }
       return 'OK'
     },
-    sadd: async (key: string, ...members: string[]) => {
-      return await ioredisClient.sadd(key, ...members)
+    sadd: async <TData = number>(key: string, ...members: string[]): Promise<TData> => {
+      const result = await ioredisClient.sadd(key, ...members)
+      return result as TData
     },
-    eval: async (script: string, keys: string[], args: string[]) => {
-      return await ioredisClient.eval(script, keys.length, ...keys, ...args)
+    eval: async <TArgs extends unknown[], TData = unknown>(
+      script: string,
+      keys: string[],
+      args: TArgs
+    ): Promise<TData> => {
+      const result = await ioredisClient.eval(
+        script,
+        keys.length,
+        ...keys,
+        ...(args as string[])
+      )
+      return result as TData
     },
   }
 }
