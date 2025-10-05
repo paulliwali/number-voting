@@ -9,7 +9,8 @@ echo "Waiting for database to be ready..."
 MAX_RETRIES=30
 RETRY_COUNT=0
 
-until npx prisma db execute --stdin <<< "SELECT 1" > /dev/null 2>&1 || [ $RETRY_COUNT -eq $MAX_RETRIES ]; do
+# Try to connect to database using prisma migrate status
+until npx prisma migrate status > /dev/null 2>&1 || [ $RETRY_COUNT -eq $MAX_RETRIES ]; do
   RETRY_COUNT=$((RETRY_COUNT + 1))
   echo "Database not ready yet (attempt $RETRY_COUNT/$MAX_RETRIES)..."
   sleep 2
