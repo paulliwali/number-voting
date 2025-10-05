@@ -41,49 +41,61 @@ A modern web application where users vote between two random numbers (0-100). Bu
 ## Railway Deployment
 
 ### Prerequisites
-- Railway account
-- GitHub repository
+- Railway account ([sign up](https://railway.com))
+- GitHub repository with this code
 
 ### Deploy Steps
 
-1. **Connect your GitHub repo to Railway:**
-   - Go to [Railway](https://railway.com)
-   - Click "Deploy Now" → "Deploy from GitHub repo"
-   - Select your repository
+1. **Create a new Railway project:**
+   - Go to [Railway](https://railway.com/dashboard)
+   - Click "New Project" → "Deploy from GitHub repo"
+   - Select your `number-voting` repository
+   - Railway will detect the Dockerfile and begin building
 
 2. **Add PostgreSQL database:**
    - In your Railway project dashboard
-   - Click "Add Service" → "Database" → "PostgreSQL"
-   - Railway will automatically set the `DATABASE_URL` environment variable
+   - Click "New" → "Database" → "PostgreSQL"
+   - Wait for the database to deploy
 
-3. **Configure environment variables:**
-   Railway will automatically detect and set most variables, but ensure:
-   - `DATABASE_URL` is set (auto-configured with PostgreSQL addon)
-   - `NODE_ENV` is set to `production` (auto-configured)
+3. **Configure DATABASE_URL:**
+   - Go to your app service → **Variables** tab
+   - Click "New Variable" → **Variable** (not Reference)
+   - Name: `DATABASE_URL`
+   - Value: Go to Postgres service → **Connect** tab → Copy the **Public URL**
+   - Paste the public URL (format: `postgresql://postgres:xxxxx@region.proxy.rlwy.net:PORT/railway`)
+   - Save and redeploy
 
-4. **Deploy:**
-   - Railway will automatically build and deploy your app
+4. **Verify deployment:**
+   - Railway will automatically:
+     - Build using the Dockerfile
+     - Run database migrations via `scripts/wait-for-db.sh`
+     - Start the application
    - Your app will be available at `https://your-app-name.railway.app`
 
-### Database Migration on Railway
+### Important Notes
 
-The app will automatically run `prisma generate` during the build process. For the initial deployment, Railway will need to run the database migration:
+- **Database Connection**: Use the **public URL** from the Postgres service (not the internal `postgres.railway.internal` reference)
+- **Automatic Migrations**: The `wait-for-db.sh` script automatically runs `prisma migrate deploy` on startup
+- **Rate Limiting**: For production rate limiting, add Upstash Redis (see Environment Variables section)
 
-1. In Railway dashboard, go to your service
-2. Open the "Settings" tab
-3. Add a custom start command: `npx prisma migrate deploy && npm start`
+### Troubleshooting
 
-Or manually run the migration after deployment:
-```bash
-railway run npx prisma migrate deploy
-```
+**P3005 Error (Database not empty)**:
+- Delete the PostgreSQL service and create a new one
+- This gives you a fresh database without migration conflicts
+
+**Can't reach database**:
+- Ensure you're using the public URL, not `postgres.railway.internal`
+- Check that "Public Networking" is enabled on the Postgres service
 
 ## Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `DATABASE_URL` | PostgreSQL connection string | Auto-set by Railway |
-| `NODE_ENV` | Environment mode | `production` |
+| Variable | Description | Required | Default |
+|----------|-------------|----------|---------|
+| `DATABASE_URL` | PostgreSQL connection string | Yes | Set manually in Railway |
+| `NODE_ENV` | Environment mode | No | `production` |
+| `UPSTASH_REDIS_REST_URL` | Upstash Redis URL for rate limiting | No | Falls back to no rate limiting |
+| `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis token | No | Falls back to no rate limiting |
 
 ## API Endpoints
 
