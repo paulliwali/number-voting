@@ -77,8 +77,11 @@ export default function VotingInterface() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Vote Distribution Background */}
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Base gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 z-0" />
+
+      {/* Vote Distribution Background - overlays gradient */}
       <VoteDistribution />
 
       <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 md:p-12 shadow-2xl border border-white/20 max-w-2xl w-full relative z-10">

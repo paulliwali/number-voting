@@ -56,76 +56,62 @@ export default function VoteDistribution({ onDataUpdate }: VoteDistributionProps
     return () => clearInterval(interval)
   }, [])
 
-  // Don't render if no data
-  if (distribution.length === 0) return null
+  // Always render, even with no data (to show empty state)
+  // if (distribution.length === 0) return null
 
   const hoveredData = hoveredBar !== null ? distribution[hoveredBar] : null
 
   return (
     <motion.div
       ref={containerRef}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8, delay: 0.6 }}
-      className="absolute bottom-0 left-0 right-0 h-32 pointer-events-auto"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 1.2, delay: 0.3 }}
+      className="absolute inset-0 pointer-events-auto z-[1]"
       onMouseLeave={handleMouseLeave}
     >
-      {/* Background gradient overlay for wallpaper effect */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/5 via-transparent to-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent" />
 
-      {/* Distribution bars */}
-      <div className="flex items-end justify-center h-full px-4 gap-[1px] md:gap-[2px]">
-        {distribution.map((data) => {
-          const height = maxVotes > 0 ? (data.votes / maxVotes) * 100 : 0
-          const isHovered = hoveredBar === data.number
+      {/* Background gradient overlay for depth */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/20" />
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/3 to-transparent" />
 
-          return (
-            <motion.div
-              key={data.number}
-              className="relative flex-1 min-w-[1px] max-w-[4px] cursor-pointer"
-              onMouseMove={(e) => handleMouseMove(e, data.number)}
-              whileHover={{ scale: 1.2 }}
-              transition={{ type: "spring", stiffness: 400, damping: 25 }}
-            >
-              <motion.div
-                className={`w-full bg-gradient-to-t ${
-                  isHovered
-                    ? 'from-white/30 to-white/15'
-                    : data.votes > 0
-                    ? 'from-white/15 to-white/8'
-                    : 'from-white/6 to-white/3'
-                } backdrop-blur-[1px] rounded-t-[1px] shadow-sm`}
+      {/* X-axis with range labels - positioned below bars */}
+      <div className="absolute bottom-0 left-0 right-0 h-12 flex items-center px-8 sm:px-12 md:px-16 lg:px-24">
+        <div className="flex-1 text-center text-white/40 text-xs font-medium">0-25</div>
+        <div className="flex-1 text-center text-white/40 text-xs font-medium">25-50</div>
+        <div className="flex-1 text-center text-white/40 text-xs font-medium">50-75</div>
+        <div className="flex-1 text-center text-white/40 text-xs font-medium">75-100</div>
+      </div>
+
+      {/* Distribution bars with edge buffer - scaled to max 40% height */}
+      <div className="absolute bottom-12 left-0 right-0 h-[calc(100%-3rem)]">
+        <div className="flex items-end justify-center h-full px-8 sm:px-12 md:px-16 lg:px-24 gap-[1px]">
+          {distribution.map((data) => {
+            // Scale height to max 40% of screen
+            const scaledHeight = maxVotes > 0 ? (data.votes / maxVotes) * 40 : 0
+            const isHovered = hoveredBar === data.number
+
+            // Minimalist color scheme - subtle and refined
+            let bgColor = 'rgba(255, 255, 255, 0.15)' // default subtle white
+            if (data.votes > 0) bgColor = 'rgba(96, 165, 250, 0.35)' // subtle blue
+            if (data.votes > maxVotes * 0.4) bgColor = 'rgba(147, 107, 216, 0.4)' // subtle purple
+            if (data.votes > maxVotes * 0.7) bgColor = 'rgba(236, 72, 153, 0.45)' // subtle pink
+            if (isHovered) bgColor = 'rgba(34, 211, 238, 0.6)' // brighter cyan on hover
+
+            return (
+              <div
+                key={data.number}
+                className="relative flex-1 min-w-[2px] max-w-[12px] cursor-pointer transition-all duration-200 rounded-t-sm"
+                onMouseMove={(e) => handleMouseMove(e, data.number)}
                 style={{
-                  height: `${Math.max(height, data.votes > 0 ? 3 : 1)}%` // Minimum height based on votes
-                }}
-                animate={{
-                  height: `${Math.max(height, data.votes > 0 ? 3 : 1)}%`,
-                  opacity: isHovered ? 0.9 : data.votes > 0 ? 0.6 : 0.2
-                }}
-                transition={{
-                  type: "spring",
-                  stiffness: 400,
-                  damping: 35,
-                  duration: 0.5
+                  height: `${Math.max(scaledHeight, data.votes > 0 ? 3 : 1.5)}%`,
+                  backgroundColor: bgColor,
+                  transform: isHovered ? 'scaleX(1.2) scaleY(1.1)' : 'scaleX(1) scaleY(1)'
                 }}
               />
-
-              {/* Glow effect on hover */}
-              <AnimatePresence>
-                {isHovered && data.votes > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    className="absolute inset-0 bg-white/25 blur-[2px] rounded-t-[1px]"
-                    style={{ height: `${Math.max(height, data.votes > 0 ? 3 : 1)}%` }}
-                  />
-                )}
-              </AnimatePresence>
-            </motion.div>
-          )
-        })}
+            )
+          })}
+        </div>
       </div>
 
       {/* Hover annotation */}
