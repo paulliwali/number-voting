@@ -70,7 +70,7 @@ A modern web application where users vote between two random numbers (0-100). Bu
      - Build using the Dockerfile
      - Run database migrations via `scripts/wait-for-db.sh`
      - Start the application
-   - Your app will be available at `https://your-app-name.railway.app`
+   - Your app will be available at `https://your-app-name.up.railway.app`
 
 ### Important Notes
 
@@ -90,11 +90,11 @@ A modern web application where users vote between two random numbers (0-100). Bu
 
 ## Environment Variables
 
-| Variable | Description | Required | Default |
-|----------|-------------|----------|---------|
-| `DATABASE_URL` | PostgreSQL connection string | Yes | Set manually in Railway |
-| `NODE_ENV` | Environment mode | No | `production` |
-| `REDIS_URL` | Railway Redis URL for rate limiting | No | Falls back to no rate limiting |
+| Variable       | Description                         | Required | Default                        |
+| -------------- | ----------------------------------- | -------- | ------------------------------ |
+| `DATABASE_URL` | PostgreSQL connection string        | Yes      | Set manually in Railway        |
+| `NODE_ENV`     | Environment mode                    | No       | `production`                   |
+| `REDIS_URL`    | Railway Redis URL for rate limiting | No       | Falls back to no rate limiting |
 
 ## API Endpoints
 
