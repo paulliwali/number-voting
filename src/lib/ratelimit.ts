@@ -1,15 +1,21 @@
 import { Ratelimit } from '@upstash/ratelimit'
-import { Redis } from '@upstash/redis'
+import { Redis as UpstashRedis } from '@upstash/redis'
+import Redis from 'ioredis'
 
 // Create Redis client
-// For local development, this uses an in-memory store as fallback
-// For production, set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN in your environment
-const redis = process.env.UPSTASH_REDIS_REST_URL
-  ? new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN || '',
-    })
-  : undefined
+// Supports both Railway Redis (REDIS_URL) and Upstash Redis (UPSTASH_REDIS_REST_URL)
+let redis: UpstashRedis | Redis | undefined
+
+if (process.env.REDIS_URL) {
+  // Railway Redis using ioredis
+  redis = new Redis(process.env.REDIS_URL)
+} else if (process.env.UPSTASH_REDIS_REST_URL) {
+  // Upstash Redis using REST API
+  redis = new UpstashRedis({
+    url: process.env.UPSTASH_REDIS_REST_URL,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN || '',
+  })
+}
 
 // Vote rate limiter: 10 votes per minute per IP
 export const voteRateLimiter = redis
