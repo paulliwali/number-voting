@@ -43,29 +43,45 @@ export default function VotingInterface() {
     setIsVoting(true)
     setIsLoading(true)
 
-    try {
-      const response = await fetch('/api/vote', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          number1: numbers.number1,
-          number2: numbers.number2,
-          winner,
-        }),
-      })
+    // Optimistically update vote count
+    setTotalVotes(prev => (prev ?? 0) + 1)
 
-      if (response.ok) {
-        setTotalVotes(prev => (prev ?? 0) + 1)
-        setTimeout(async () => {
-          await fetchNewNumbers()
+    try {
+      // Submit vote and fetch new numbers in parallel for faster response
+      const [voteResponse, newNumbersResponse] = await Promise.all([
+        fetch('/api/vote', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            number1: numbers.number1,
+            number2: numbers.number2,
+            winner,
+          }),
+        }),
+        fetch('/api/numbers')
+      ])
+
+      if (voteResponse.ok && newNumbersResponse.ok) {
+        const newNumbers = await newNumbersResponse.json()
+
+        // Short delay for smooth animation transition
+        setTimeout(() => {
+          setNumbers(newNumbers)
           setIsLoading(false)
           setIsVoting(false)
-        }, VOTE_TRANSITION_DELAY_MS)
+        }, 300)
+      } else {
+        // Revert optimistic update on error
+        setTotalVotes(prev => (prev ?? 1) - 1)
+        setIsLoading(false)
+        setIsVoting(false)
       }
     } catch (error) {
       console.error('Error voting:', error)
+      // Revert optimistic update on error
+      setTotalVotes(prev => (prev ?? 1) - 1)
       setIsLoading(false)
       setIsVoting(false)
     }

@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Winner must be one of the two numbers' }, { status: 400 })
     }
 
-    const vote = await prisma.vote.create({
+    await prisma.vote.create({
       data: {
         number1,
         number2,
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    return NextResponse.json({ success: true, vote })
+    return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error creating vote:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

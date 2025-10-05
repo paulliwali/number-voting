@@ -20,5 +20,6 @@ model Vote {
   winner    Int
   createdAt DateTime @default(now())
 
+  @@index([winner])
   @@map("votes")
 }
