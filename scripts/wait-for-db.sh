@@ -1,31 +1,25 @@
 #!/bin/sh
 # wait-for-db.sh - Wait for database to be ready before running migrations
 
-set -e
-
 echo "Waiting for database to be ready..."
 
 # Maximum number of retries
-MAX_RETRIES=30
+MAX_RETRIES=60
 RETRY_COUNT=0
 
-# Try to connect to database using prisma migrate status
-until npx prisma migrate status > /dev/null 2>&1 || [ $RETRY_COUNT -eq $MAX_RETRIES ]; do
+# Keep trying to run migrations until it succeeds
+until npx prisma migrate deploy 2>/dev/null; do
   RETRY_COUNT=$((RETRY_COUNT + 1))
+
+  if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
+    echo "Failed to connect to database after $MAX_RETRIES attempts"
+    exit 1
+  fi
+
   echo "Database not ready yet (attempt $RETRY_COUNT/$MAX_RETRIES)..."
   sleep 2
 done
 
-if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
-  echo "Failed to connect to database after $MAX_RETRIES attempts"
-  exit 1
-fi
-
-echo "Database is ready!"
-
-# Run migrations
-echo "Running database migrations..."
-npx prisma migrate deploy
-
+echo "Database migrations completed successfully!"
 echo "Starting application..."
 exec "$@"
