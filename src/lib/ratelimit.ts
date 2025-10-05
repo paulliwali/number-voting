@@ -1,9 +1,16 @@
 import { Ratelimit } from '@upstash/ratelimit'
-import type { Redis as UpstashRedis } from '@upstash/ratelimit'
 import Redis from 'ioredis'
 
+// Type definition for Redis client compatible with @upstash/ratelimit
+interface UpstashRedisCompatible {
+  get: (key: string) => Promise<string | null>
+  set: (key: string, value: string, options?: { ex?: number; px?: number }) => Promise<string>
+  sadd: (key: string, ...members: string[]) => Promise<number>
+  eval: (script: string, keys: string[], args: string[]) => Promise<unknown>
+}
+
 // Create Redis client wrapper that works with @upstash/ratelimit
-let redis: UpstashRedis | undefined
+let redis: UpstashRedisCompatible | undefined
 
 if (process.env.REDIS_URL) {
   // Railway Redis using ioredis - wrap it to match Upstash interface
@@ -31,7 +38,7 @@ if (process.env.REDIS_URL) {
     eval: async (script: string, keys: string[], args: string[]) => {
       return await ioredisClient.eval(script, keys.length, ...keys, ...args)
     },
-  } as UpstashRedis
+  }
 }
 
 // Vote rate limiter: 10 votes per minute per IP
