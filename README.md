@@ -76,7 +76,7 @@ A modern web application where users vote between two random numbers (0-100). Bu
 
 - **Database Connection**: Use the **public URL** from the Postgres service (not the internal `postgres.railway.internal` reference)
 - **Automatic Migrations**: The `wait-for-db.sh` script automatically runs `prisma migrate deploy` on startup
-- **Rate Limiting**: For production rate limiting, add Upstash Redis (see Environment Variables section)
+- **Rate Limiting**: For production rate limiting, add Railway Redis (see Environment Variables section)
 
 ### Troubleshooting
 
@@ -94,8 +94,7 @@ A modern web application where users vote between two random numbers (0-100). Bu
 |----------|-------------|----------|---------|
 | `DATABASE_URL` | PostgreSQL connection string | Yes | Set manually in Railway |
 | `NODE_ENV` | Environment mode | No | `production` |
-| `UPSTASH_REDIS_REST_URL` | Upstash Redis URL for rate limiting | No | Falls back to no rate limiting |
-| `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis token | No | Falls back to no rate limiting |
+| `REDIS_URL` | Railway Redis URL for rate limiting | No | Falls back to no rate limiting |
 
 ## API Endpoints
 

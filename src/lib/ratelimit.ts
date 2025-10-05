@@ -1,20 +1,37 @@
 import { Ratelimit } from '@upstash/ratelimit'
-import { Redis as UpstashRedis } from '@upstash/redis'
+import type { Redis as UpstashRedis } from '@upstash/ratelimit'
 import Redis from 'ioredis'
 
-// Create Redis client
-// Supports both Railway Redis (REDIS_URL) and Upstash Redis (UPSTASH_REDIS_REST_URL)
-let redis: UpstashRedis | Redis | undefined
+// Create Redis client wrapper that works with @upstash/ratelimit
+let redis: UpstashRedis | undefined
 
 if (process.env.REDIS_URL) {
-  // Railway Redis using ioredis
-  redis = new Redis(process.env.REDIS_URL)
-} else if (process.env.UPSTASH_REDIS_REST_URL) {
-  // Upstash Redis using REST API
-  redis = new UpstashRedis({
-    url: process.env.UPSTASH_REDIS_REST_URL,
-    token: process.env.UPSTASH_REDIS_REST_TOKEN || '',
-  })
+  // Railway Redis using ioredis - wrap it to match Upstash interface
+  const ioredisClient = new Redis(process.env.REDIS_URL)
+
+  // Create adapter that implements Upstash Redis interface
+  redis = {
+    get: async (key: string) => {
+      const result = await ioredisClient.get(key)
+      return result
+    },
+    set: async (key: string, value: string, options?: { ex?: number; px?: number }) => {
+      if (options?.ex) {
+        await ioredisClient.setex(key, options.ex, value)
+      } else if (options?.px) {
+        await ioredisClient.psetex(key, options.px, value)
+      } else {
+        await ioredisClient.set(key, value)
+      }
+      return 'OK'
+    },
+    sadd: async (key: string, ...members: string[]) => {
+      return await ioredisClient.sadd(key, ...members)
+    },
+    eval: async (script: string, keys: string[], args: string[]) => {
+      return await ioredisClient.eval(script, keys.length, ...keys, ...args)
+    },
+  } as UpstashRedis
 }
 
 // Vote rate limiter: 10 votes per minute per IP
