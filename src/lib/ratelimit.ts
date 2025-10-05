@@ -19,6 +19,11 @@ interface UpstashRedisCompatible {
     keys: string[],
     args: TArgs
   ) => Promise<TData>
+  evalsha: <TArgs extends unknown[], TData = unknown>(
+    sha1: string,
+    keys: string[],
+    args: TArgs
+  ) => Promise<TData>
 }
 
 // Create Redis client wrapper that works with @upstash/ratelimit
@@ -63,6 +68,19 @@ if (process.env.REDIS_URL) {
     ): Promise<TData> => {
       const result = await ioredisClient.eval(
         script,
+        keys.length,
+        ...keys,
+        ...(args as string[])
+      )
+      return result as TData
+    },
+    evalsha: async <TArgs extends unknown[], TData = unknown>(
+      sha1: string,
+      keys: string[],
+      args: TArgs
+    ): Promise<TData> => {
+      const result = await ioredisClient.evalsha(
+        sha1,
         keys.length,
         ...keys,
         ...(args as string[])
